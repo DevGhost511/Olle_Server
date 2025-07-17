@@ -4,7 +4,7 @@ import { getImages, uploadFile } from '../controller/imageUpload';
 
 const router = Router();
 
-router.get('/imageIdentifier', imageIdentification);
+router.post('/openai/image-identify', imageIdentification);
 
 router.use('/images', express_static('images'));
 router.get('/images/:path', getImages)
