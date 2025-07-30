@@ -121,7 +121,6 @@ async function webSearch(query: string) {
 }
 
 export const olleAIChatting = async (req: Request, res: Response) => {
-    console.log('[olleAIChatting] Query params:', req.query);
     // Accept parameters from query for GET/SSE
     const threadId = req.query.threadId as string;
     const image_url = req.query.image_url as string | undefined;
@@ -130,6 +129,17 @@ export const olleAIChatting = async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Prompt is required' });
     }
     let activeThreadId = threadId;
+    
+    // Generate new threadID if not provided
+    if (!activeThreadId) {
+        try {
+            const thread = await openai.beta.threads.create();
+            activeThreadId = thread.id;
+        } catch (err) {
+            console.error('Failed to create thread:', err);
+            return res.status(500).json({ error: 'Failed to create thread' });
+        }
+    }
 
     let content: Array<any> = [
         {
