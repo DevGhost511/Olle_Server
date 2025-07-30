@@ -25,6 +25,7 @@ export const imageIdentification = async (req: Request, res: Response) => {
         try {
             const thread = await openai.beta.threads.create();
             activeThreadId = thread.id;
+            console.log(activeThreadId)
         } catch (err) {
         }
     }
@@ -129,17 +130,17 @@ export const olleAIChatting = async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Prompt is required' });
     }
     let activeThreadId = threadId;
-    
+    console.log(activeThreadId)         
     // Generate new threadID if not provided
-    if (!activeThreadId) {
-        try {
-            const thread = await openai.beta.threads.create();
-            activeThreadId = thread.id;
-        } catch (err) {
-            console.error('Failed to create thread:', err);
-            return res.status(500).json({ error: 'Failed to create thread' });
-        }
-    }
+    // if (!activeThreadId) {
+    //     try {
+    //         const thread = await openai.beta.threads.create();
+    //         activeThreadId = thread.id;
+    //     } catch (err) {
+    //         console.error('Failed to create thread:', err);
+    //         return res.status(500).json({ error: 'Failed to create thread' });
+    //     }
+    // }
 
     let content: Array<any> = [
         {
