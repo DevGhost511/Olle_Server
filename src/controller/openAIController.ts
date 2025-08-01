@@ -215,40 +215,12 @@ export const olleAIChatting = async (req: Request, res: Response) => {
             // Log every event for debugging
             console.log('[OpenAI Stream Event]', JSON.stringify(event));
             
-            // Handle tool calls by providing empty responses
-            if (
-                event.event === 'thread.run.step.created' &&
-                event.data?.step_details?.type === 'tool_calls' &&
-                Array.isArray(event.data.step_details.tool_calls)
-            ) {
-                const runId = event.data.run_id;
-                const toolCalls = event.data.step_details.tool_calls;
-                const toolOutputs = [];
-                
-                for (const toolCall of toolCalls) {
-                    // Provide empty response for any tool call
-                    toolOutputs.push({
-                        tool_call_id: toolCall.id,
-                        output: "Tool functionality disabled"
-                    });
-                }
-                
-                // Send empty tool outputs back to OpenAI
-                await openai.beta.threads.runs.submitToolOutputs(
-                    runId,
-                    {
-                        tool_outputs: toolOutputs,
-                        thread_id: activeThreadId
-                    }
-                );
-            } else {
-                // Log assistant message deltas for debugging
-                if (event.event === 'thread.message.delta') {
-                    console.log('[Assistant Message Delta]', JSON.stringify(event.data));
-                }
-                // Stream normal events to client
-                res.write(`data: ${JSON.stringify(event)}\n\n`);
+            // Log assistant message deltas for debugging
+            if (event.event === 'thread.message.delta') {
+                console.log('[Assistant Message Delta]', JSON.stringify(event.data));
             }
+            // Stream normal events to client
+            res.write(`data: ${JSON.stringify(event)}\n\n`);
         }
         res.write('event: end\ndata: [DONE]\n\n');
         res.end();
