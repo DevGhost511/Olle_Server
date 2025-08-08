@@ -8,12 +8,13 @@ const userSchema = new mongoose.Schema({
         },
         message: "Invalid email address"
     } },
-    password: { type: String, required: true },
+    password: { type: String, required: false },
+    googleId: { type: String, required: false },
     emailVerified: { type: Boolean, default: false },
 }, { timestamps: true });
 
 userSchema.pre("save", async function (this: any, next: any) {
-    if (!this.isModified("password")) return next();
+    if (!this.isModified("password") || !this.password) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });

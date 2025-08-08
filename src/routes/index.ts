@@ -2,7 +2,7 @@ import { Router, static as express_static } from 'express';
 import { imageIdentification, olleAIChatting, olleChat } from '../controller/openAIController';
 import { getImages, uploadFile } from '../controller/imageUpload';
 import { sendOtp, verifyOtp } from '../controller/otpController';
-import { signUp, signIn } from '../controller/userController';
+import { signUp, signIn, googleSignUp, googleSignIn } from '../controller/userController';
 
 const router = Router();
 
@@ -14,6 +14,8 @@ router.post('/otp/verify', verifyOtp);
 //User Routes
 router.post('/auth/signup', signUp);
 router.post('/auth/signin', signIn);
+router.post('/auth/google-signup', googleSignUp);
+router.post('/auth/google-signin', googleSignIn);
 //Image Routes
 router.use('/images', express_static('images'));
 router.get('/images/:path', getImages)
