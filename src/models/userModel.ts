@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true, validate: {
+    email: { type: String, required: true, validate: {
         validator: function (email: string) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         },
