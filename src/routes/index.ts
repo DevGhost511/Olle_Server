@@ -3,8 +3,14 @@ import { imageIdentification, olleAIChatting, olleChat } from '../controller/ope
 import { getImages, uploadFile } from '../controller/imageUpload';
 import { sendOtp, verifyOtp } from '../controller/otpController';
 import { signUp, signIn, googleSignUp, googleSignIn } from '../controller/userController';
+import { addCollection, getAllCollections } from '../controller/collectionController';
+import { auth } from '../middlewares/errorHandler';
 
 const router = Router();
+
+//Collection Routes
+router.post('/collections', auth, addCollection);
+router.get('/collections', auth, getAllCollections);
 
 router.post('/image-identify', imageIdentification);
 router.post('/openai/chat', olleChat);
@@ -21,7 +27,7 @@ router.use('/images', express_static('images'));
 router.get('/images/:path', getImages)
 
 //Olle Chat Routes
-    router.get('/olle-chat', olleAIChatting);
+router.get('/olle-chat', olleAIChatting);
 //File Routes
 router.post('/files', uploadFile);
 //Root Route
