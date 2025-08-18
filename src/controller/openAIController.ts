@@ -1,7 +1,58 @@
 import { Request, Response } from "express";
 import OpenAI from "openai";
 import { TextContentBlock } from "openai/resources/beta/threads/messages";
-import Stream from "stream";
+
+
+const PROMPT_AFTER_IMAGE_IDENTIFICATION = `
+Please respond in natural, conversational text format. Do not use JSON or structured data format. Just provide helpful 
+`
+const PROMPT_IMAGE_IDENTIFICATION = `Analyze this image to identify if it contains a collectible item from these categories: Car, Watch, or Art. 
+
+        If a collectible is found, provide:
+        - name: Detailed model/title including brand and specific model
+        - rarerate: Rarity score from 1 (common) to 5 (extremely rare)
+        - price: Array of 10 estimated market values in USD (6-month intervals from 2020 to now)
+        - description: One paragraph including production date, origin, and key details
+
+        If no collectible is identified, return: {"message": "No collectible found"}
+
+        Response format (JSON only, no additional text):
+        {
+          "name": "string",
+          "rarerate": number,
+          "category": "string", // Car, Watch, Art
+          "price": [number array],
+          "description": "string",
+          "categories": [
+            {
+              "name": "string",
+              "value": "string"
+            }
+          ]
+        }
+          For Car, the categories are:
+          - Production Years(example: 2018~2019)
+          - Transmission
+          - Engine(displacement + type)
+          - Body Style
+          - Drive
+          - Mileage(exact if known)
+          - Colour(factory name/custom)
+          - Key options/packages(example: Weissach, PCCB, Clubsport, etc.)
+          - Number of owners(exact if known)
+          - Service History Summary(exact if known)
+          For Watch, the categories are:
+          - Brand & Model(example: Rolex Daytona)
+          - Reference Number(example: 116500LN)
+          - Year/Production Year(example: 1962)
+          - Case Size & Material(example: 40mm, Stainless Steel, Gold, etc.)
+          - Dial Colour(example: Black, Blue, etc.)
+          - Movement caliber & type(example: Automatic, Quartz, etc.)
+          - Bracelet/strap type(example: Stainless Steel, Gold, etc.)
+          - Papers/Box(yes/no)
+          - Condition grading(example: 95/100)
+          - Service History Summary(exact if known)
+        `
 if (!process.env.OPENAI_API_KEY) {
     console.error("OPENAI_API_KEY environment variable is not set");
 }
@@ -33,8 +84,8 @@ async function withThreadLock(threadId: string, fn: () => Promise<any>) {
 
 export const imageIdentification = async (req: Request, res: Response) => {
     try {
-        const { threadId, image_url = null, prompt } = req.body;
-        
+        const { threadId, image_url = null } = req.body;
+
         if (!image_url) {
             return res.status(400).json({ error: 'Image URL is required for identification' });
         }
@@ -55,7 +106,7 @@ export const imageIdentification = async (req: Request, res: Response) => {
         let content: Array<any> = [
             {
                 type: 'text',
-                text: prompt
+                text: PROMPT_IMAGE_IDENTIFICATION
             },
             {
                 type: 'image_url',
@@ -83,29 +134,29 @@ export const imageIdentification = async (req: Request, res: Response) => {
 
         while (runStatus !== 'completed' && retries < maxRetries) {
             await new Promise((r) => setTimeout(r, 1000));
-            
+
             try {
                 const checkRun = await openai.beta.threads.runs.retrieve(run.id, { thread_id: activeThreadId });
                 runStatus = checkRun.status;
-                
+
                 if (runStatus === 'failed') {
                     console.error('Run failed:', checkRun.last_error);
-                    return res.status(500).json({ 
-                        error: 'Assistant run failed', 
-                        details: checkRun.last_error 
+                    return res.status(500).json({
+                        error: 'Assistant run failed',
+                        details: checkRun.last_error
                     });
                 }
-                
+
                 if (runStatus === 'cancelled') {
                     return res.status(500).json({ error: 'Assistant run was cancelled' });
                 }
-            
-                
+
+
             } catch (err) {
                 console.error('Error checking run status:', err);
                 return res.status(500).json({ error: 'Failed to check run status' });
             }
-            
+
             retries++;
         }
 
@@ -124,7 +175,7 @@ export const imageIdentification = async (req: Request, res: Response) => {
             parsedReply = JSON.parse(reply);
         } catch (parseError) {
             console.error('Failed to parse AI response as JSON:', reply);
-            return res.status(500).json({ 
+            return res.status(500).json({
                 error: 'Invalid JSON response from AI',
                 rawResponse: reply
             });
@@ -138,7 +189,7 @@ export const imageIdentification = async (req: Request, res: Response) => {
 
     } catch (error) {
         console.error('Error in imageIdentification:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Internal server error',
             message: error instanceof Error ? error.message : 'Unknown error'
         });
@@ -155,7 +206,6 @@ export const olleAIChatting = async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Prompt is required' });
     }
     let activeThreadId = threadId;
-    console.log(activeThreadId)
 
     // --- ADDED: Use per-thread lock ---
     await withThreadLock(activeThreadId, async () => {
@@ -186,7 +236,7 @@ export const olleAIChatting = async (req: Request, res: Response) => {
         let content: Array<any> = [
             {
                 type: 'text',
-                text: prompt
+                text: PROMPT_AFTER_IMAGE_IDENTIFICATION + `User: ${prompt}`
             }
         ]
         image_url && content.push({
@@ -202,7 +252,7 @@ export const olleAIChatting = async (req: Request, res: Response) => {
                 content: content
             }
         );
-        const stream = await openai.beta.threads.runs.createAndStream(
+        const stream = openai.beta.threads.runs.createAndStream(
             activeThreadId,
             { assistant_id: ASSISTANT_ID },
             { stream: true }
@@ -214,7 +264,7 @@ export const olleAIChatting = async (req: Request, res: Response) => {
         for await (const event of stream) {
             // Log every event for debugging
             console.log('[OpenAI Stream Event]', JSON.stringify(event));
-            
+
             // Log assistant message deltas for debugging
             if (event.event === 'thread.message.delta') {
                 console.log('[Assistant Message Delta]', JSON.stringify(event.data));
