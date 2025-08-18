@@ -262,4 +262,15 @@ export const olleChat = async (req: Request, res: Response) => {
     }
 }
 
+export const getChats = async (req: Request, res: Response) => {
+    const { threadId } = req.params;
+    try {
+        const chats = await openai.beta.threads.messages.list(threadId);
+        res.status(200).json(chats.data);
+    } catch (error) {
+        console.error("Error in getChats:", error);
+        res.status(500).json({ error: "Failed to get chats" });
+    }
+}
+
 

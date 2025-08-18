@@ -1,9 +1,9 @@
 import { Router, static as express_static } from 'express';
-import { imageIdentification, olleAIChatting, olleChat } from '../controller/openAIController';
+import { getChats, imageIdentification, olleAIChatting, olleChat } from '../controller/openAIController';
 import { getImages, uploadFile } from '../controller/imageUpload';
 import { sendOtp, verifyOtp } from '../controller/otpController';
 import { signUp, signIn, googleSignUp, googleSignIn } from '../controller/userController';
-import { addCollection, getAllCollections } from '../controller/collectionController';
+import { addCollection, getAllCollections, getCollection } from '../controller/collectionController';
 import { auth } from '../middlewares/errorHandler';
 
 const router = Router();
@@ -11,7 +11,7 @@ const router = Router();
 //Collection Routes
 router.post('/collections', auth, addCollection);
 router.get('/collections', auth, getAllCollections);
-
+router.get('/collections/:id', auth, getCollection);
 router.post('/image-identify', imageIdentification);
 router.post('/openai/chat', olleChat);
 //OTP Routes
@@ -28,6 +28,7 @@ router.get('/images/:path', getImages)
 
 //Olle Chat Routes
 router.get('/olle-chat', olleAIChatting);
+router.get('/chats/:threadId', getChats);
 //File Routes
 router.post('/files', uploadFile);
 //Root Route

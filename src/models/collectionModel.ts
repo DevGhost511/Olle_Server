@@ -45,6 +45,14 @@ const collectionSchema = new Schema({
         type: String,
         required: true,
     },
+    price: {
+        type: [Number],
+        required: true,
+    },
+    rarerate: {
+        type: Number,
+        required: true,
+    },
 }, { timestamps: true });
 
 const Collection = mongoose.models.Collection || model("Collection", collectionSchema);
