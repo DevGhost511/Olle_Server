@@ -4,7 +4,7 @@ import { TextContentBlock } from "openai/resources/beta/threads/messages";
 
 
 const PROMPT_AFTER_IMAGE_IDENTIFICATION = `
-Please respond in natural, conversational text format. Do not use JSON or structured data format. Just provide helpful 
+Please respond in natural, conversational text format. Do not use JSON or structured data format. Just provide helpful. User: 
 `
 const PROMPT_IMAGE_IDENTIFICATION = `Analyze this image to identify if it contains a collectible item from these categories: Car, Watch, or Art. 
 
@@ -236,7 +236,7 @@ export const olleAIChatting = async (req: Request, res: Response) => {
         let content: Array<any> = [
             {
                 type: 'text',
-                text: PROMPT_AFTER_IMAGE_IDENTIFICATION + `User: ${prompt}`
+                text: PROMPT_AFTER_IMAGE_IDENTIFICATION + prompt
             }
         ]
         image_url && content.push({
@@ -316,7 +316,8 @@ export const getChats = async (req: Request, res: Response) => {
     const { threadId } = req.params;
     try {
         const chats = await openai.beta.threads.messages.list(threadId);
-        res.status(200).json(chats.data);
+        const filteredChats = chats.data.reverse().slice(2).map((chat: any) => ({ role: chat.role, content: chat.content[0].text.value.replace(PROMPT_AFTER_IMAGE_IDENTIFICATION, "") }));
+        res.status(200).json(filteredChats);
     } catch (error) {
         console.error("Error in getChats:", error);
         res.status(500).json({ error: "Failed to get chats" });
