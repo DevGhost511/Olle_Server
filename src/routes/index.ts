@@ -4,6 +4,7 @@ import { getImages, uploadFile } from '../controller/imageUpload';
 import { sendOtp, verifyOtp } from '../controller/otpController';
 import { signUp, signIn, googleSignUp, googleSignIn } from '../controller/userController';
 import { addCollection, getAllCollections, getCollection } from '../controller/collectionController';
+import { addWishList, getAllWishLists, getWishList } from '../controller/wishListController';
 import { auth } from '../middlewares/errorHandler';
 
 const router = Router();
@@ -12,6 +13,10 @@ const router = Router();
 router.post('/collections', auth, addCollection);
 router.get('/collections', auth, getAllCollections);
 router.get('/collections/:id', auth, getCollection);
+//WishList Routes
+router.post('/wishlists', auth, addWishList);
+router.get('/wishlists', auth, getAllWishLists);
+router.get('/wishlists/:id', auth, getWishList);
 router.post('/image-identify', imageIdentification);
 router.post('/openai/chat', olleChat);
 //OTP Routes
