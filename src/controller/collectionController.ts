@@ -33,3 +33,13 @@ export const getCollection = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Failed to get collection", error: error });
     }
 }
+export const deleteCollection = async (req: Request, res: Response) => {
+    const user = req.user as IUser;
+    const { id } = req.params;
+    try {
+        await Collection.findByIdAndDelete(id).where({ user: user._id });
+        res.status(200).json({ message: "Collection deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to delete collection", error: error });
+    }
+}
