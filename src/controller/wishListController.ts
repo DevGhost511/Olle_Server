@@ -33,3 +33,13 @@ export const getWishList = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Failed to get wishList", error: error });
     }
 }
+export const deleteWishList = async (req: Request, res: Response) => {
+    const user = req.user as IUser;
+    const { id } = req.params;
+    try {
+        await WishList.findByIdAndDelete(id).where({ user: user._id });
+        res.status(200).json({ message: "WishList deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to delete WishList", error: error });
+    }
+}
