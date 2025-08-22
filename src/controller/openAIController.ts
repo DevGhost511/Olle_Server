@@ -324,4 +324,40 @@ export const getChats = async (req: Request, res: Response) => {
     }
 }
 
+export const olleAIChatsStreamWithoutImageAnalysis = async (req: Request, res: Response) => {
+    let { threadId, prompt } = req.query;
+    if (!threadId) {
+        //crete new thread
+        const thread = await openai.beta.threads.create();
+        threadId = thread.id as string;
+    }
+    let content: Array<any> = [
+        {
+            type: 'text',
+            text: PROMPT_AFTER_IMAGE_IDENTIFICATION + prompt
+        }
+    ]
+    await openai.beta.threads.messages.create(
+        threadId as string,
+        {
+            role: "user",
+            content: content
+        }
+    );
+    const stream = openai.beta.threads.runs.createAndStream(
+        threadId as string,
+        { assistant_id: ASSISTANT_ID },
+        { stream: true }
+    );
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+    for await (const event of stream) {
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+    }
+    res.write('event: end\ndata: [DONE]\n\n');
+    res.end();
+}
+
 
